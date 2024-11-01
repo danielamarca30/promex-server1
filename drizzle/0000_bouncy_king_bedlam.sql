@@ -3,7 +3,7 @@ CREATE TABLE `atencion` (
 	`ficha_id` varchar(36) NOT NULL,
 	`empleado_id` varchar(36) NOT NULL,
 	`inicio_atencion` timestamp NOT NULL,
-	`fin_atencion` timestamp NULL,
+	`fin_atencion` timestamp,
 	`resultado` text,
 	`created_at` timestamp NOT NULL DEFAULT (now()),
 	`updated_at` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,

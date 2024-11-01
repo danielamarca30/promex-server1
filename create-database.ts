@@ -3,10 +3,10 @@ import mysql from 'mysql2/promise';
 async function main() {
   const host = process.env.DB_HOST || 'localhost';
   const user = process.env.DB_USER || 'root';
-  const password = process.env.DB_PASSWORD || '';
+  const password = process.env.DB_PASSWORD || 'root';
   const dbName = process.env.DB_NAME || 'sistema_colas';
 
-  console.log(`Intentando conectar a MySQL en ${host} como ${user}`);
+  
 
   try {
     const connection = await mysql.createConnection({
@@ -15,10 +15,10 @@ async function main() {
       password,
     });
 
-    console.log('Conexión establecida. Creando base de datos...');
+    
 
     await connection.query(`CREATE DATABASE IF NOT EXISTS ${dbName}`);
-    console.log(`Base de datos '${dbName}' creada o ya existente.`);
+    
 
     await connection.end();
   } catch (error) {

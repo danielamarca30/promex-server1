@@ -37,7 +37,7 @@ async function printTicket() {
           .text('Total: $25.00')
           .cut()
           .close(() => {
-            console.log('Impresión completada');
+            
             resolve(null);
           });
       });

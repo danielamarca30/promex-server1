@@ -1,12 +1,12 @@
-import type { Config } from 'drizzle-kit';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+/** @type { import("drizzle-kit").Config } */
 export default {
   schema: './src/schema.ts',
   out: './drizzle',
-  dialect: 'mysql',
+  driver: 'mysql2',
   dbCredentials: {
     host: process.env.DB_HOST || 'localhost',
     user: process.env.DB_USER || 'root',
@@ -14,4 +14,4 @@ export default {
     database: process.env.DB_NAME || 'sistema_colas',
     port: 3306,
   },
-} satisfies Config;
+};

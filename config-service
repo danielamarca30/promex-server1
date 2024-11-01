@@ -1,0 +1,22 @@
+[Unit]
+Description=Bun Server
+After=network.target
+
+[Service]
+ExecStart=/home/servidor/.bun/bin/bun dev
+Restart=always
+User=servidor
+Group=servidor
+Environment=PATH=/usr/bin:/usr/local/bin
+Environment=NODE_ENV=production
+WorkingDirectory=/home/servidor/Promex/promex-server1
+
+[Install]
+WantedBy=multi-user.target
+
+
+
+
+
+// sudo systemctl start bun-server
+// sudo systemctl enable bun-server

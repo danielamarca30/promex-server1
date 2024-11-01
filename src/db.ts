@@ -33,7 +33,7 @@ export async function testConnection(): Promise<void> {
   try {
     const connection = await poolConnection.getConnection();
     await connection.ping(); // Esto forzará una conexión real
-    console.log('Conexión a la base de datos establecida con éxito.');
+    
     connection.release();
   } catch (error) {
     console.error('Error al conectar a la base de datos:', error);

@@ -156,7 +156,7 @@ async function main() {
     await db.insert(schema.metricaTiempoReal).values(metrica);
   }
 
-  console.log('Datos iniciales insertados con éxito.');
+  
 
   await connection.end();
 }

@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, text, datetime, int, mysqlEnum, index, uniqueIndex, boolean, timestamp, json } from 'drizzle-orm/mysql-core';
+import { mysqlTable, varchar, text, datetime, int, mysqlEnum, index, uniqueIndex, boolean, timestamp, decimal,json } from 'drizzle-orm/mysql-core';
 
 // Enums
 export const estadoFichaEnum = mysqlEnum('estado_ficha', ['Pendiente', 'Llamado', 'En_Atencion', 'Atendido', 'Cancelado', 'No_Presentado']);
@@ -80,6 +80,7 @@ export const subCategoriaServicio = mysqlTable('sub_categoria_servicio', {
 export const servicio = mysqlTable('servicio', {
   id: varchar('id', { length: 36 }).primaryKey(),
   nombre: varchar('nombre', { length: 100 }).notNull(),
+  prioridad: int('prioridad').notNull(),
   descripcion: text('descripcion'),
   categoriaId: varchar('categoria_id', { length: 36 }).notNull().references(() => categoriaServicio.id),
   subCategoriaId: varchar('sub_categoria_id', { length: 36 }).references(() => subCategoriaServicio.id),
@@ -155,7 +156,7 @@ export const videos = mysqlTable('videos', {
 export const cotizaciones=mysqlTable('cotizaciones',{
     id: varchar('id', { length: 36 }).primaryKey(),
     mineral: varchar('mineral', { length: 255 }).notNull(),
-    cotizacion: int('cotizacion').notNull(),
+    cotizacion: decimal('cotizacion', { precision: 10, scale: 2 }).notNull(),
     unidad:varchar('unidad',{length:5}).notNull(),
     fecha:timestamp('fecha').notNull().defaultNow(),
     active: boolean('active').notNull().default(true),

@@ -37,21 +37,46 @@ const authModule = new Elysia({ prefix: '/auth' })
     })
   })
   .post('/login', async ({ body, set }) => {
-    const { username, password, categoriaServicio } = body;
-  
+    const { username, password } = body;
+
     // Obtener usuario por nombre de usuario
     const [user] = await db
-    .select()
-    .from(schema.usuario)
-    .where(eq(schema.usuario.username, username))
-    .limit(1);
+      .select()
+      .from(schema.usuario)
+      .where(eq(schema.usuario.username, username))
+      .limit(1);
+
     // Verificar si el usuario existe y la contraseña es correcta
-    if (!user ||user.username!==username|| !(await bcrypt.compare(password, user.password))) {
+    if (!user || user.username !== username || !(await bcrypt.compare(password, user.password))) {
       set.status = 401;
       return { error: 'Credenciales inválidas' };
     }
-  
-    // Obtener empleado asociado al usuario
+
+    // Obtener el rol y los permisos del usuario
+    const [rol] = await db
+      .select()
+      .from(schema.rol)
+      .where(eq(schema.rol.id, user.rolId))
+      .limit(1);
+
+    if (!rol) {
+      set.status = 401;
+      return { error: 'Rol de usuario no encontrado' };
+    }
+
+    // Asumimos que 'permisos' es un array de strings
+    const permisos = Array.isArray(rol.permisos) ? rol.permisos : JSON.parse(rol.permisos as string);
+
+    // Generar token incluyendo los permisos
+    const token = jwt.sign(
+      { 
+        userId: user.id, 
+        rolId: user.rolId, 
+        permisos: permisos 
+      }, 
+      JWT_SECRET, 
+      { expiresIn: '15m' }
+    );
     const [empleado] = await db
       .select()
       .from(schema.empleado)
@@ -61,49 +86,11 @@ const authModule = new Elysia({ prefix: '/auth' })
       set.status = 401;
       return { error: 'Credenciales inválidas' };
     }
-    // Si se proporciona categoriaServicio, verificar que el empleado tenga ese servicio asignado
-    if (categoriaServicio) {
-      const [categoria]=await db.select()
-        .from(schema.categoriaServicio)
-        .where(eq(schema.categoriaServicio.nombre,categoriaServicio))
-        .limit(1);
-      const [puntoAtencion] = await db
-        .select()
-        .from(schema.puntoAtencion)
-        .where(and(eq(schema.puntoAtencion.empleadoId, empleado.id),eq(schema.puntoAtencion.categoriaId,categoria.id)))
-        .limit(1);
-
-      if (!puntoAtencion) {
-        set.status = 401;
-        return { error: 'Credenciales inválidas para la categoría de servicio especificada' };
-      }
-  
-      // Generar y devolver el token junto con la información adicional de servicio
-      const token = jwt.sign({ userId: user.id, rolId: user.rolId, categoriaServicio }, JWT_SECRET, {
-        expiresIn: '5m', // Expiración en 1 minuto
-      });
-      
-      return { token, empleado, puntoAtencion };
-    }
-    const [rol]=await db
-          .select()
-          .from(schema.rol)
-          .where(eq(schema.rol.id,user.rolId))
-          .limit(1);
-    if(JSON.parse(rol.permisos as string)===undefined){
-      set.status = 401;
-      return { error: 'Credenciales inválidas para la categoría de servicio especificada' };
-    }
-    // Generar y devolver el token si no se especifica categoriaServicio
-    const token = jwt.sign({ userId: user.id, rolId: user.rolId }, JWT_SECRET, {
-      expiresIn: '5m',
-    });
-    return { token, empleado, permisos:rol.permisos };
+    return { token, rol: rol.nombre,empleado,usuario:{id:user.id,empleadoId:user.empleadoId,username:user.username,rolId:user.rolId}, permisos: permisos };
   }, {
     body: t.Object({
       username: t.String(),
       password: t.String(),
-      categoriaServicio: t.Optional(t.Union([t.Literal('Caja'), t.Literal('Ejecutivo')])),
     })
   })
   .post('/refresh', async ({ headers, set }) => {
@@ -112,58 +99,52 @@ const authModule = new Elysia({ prefix: '/auth' })
       set.status = 401;
       return { error: 'Token no proporcionado' };
     }
-  
+
     const token = authHeader.split(' ')[1];
-  
+
     try {
-      // Intentar verificar el token
-      let decoded;
-      try {
-        decoded = jwt.verify(token, JWT_SECRET) as { exp: number; userId: string; rolId: string; categoriaServicio?: string };
-      } catch (error) {
-        // Si el token ha expirado, intentamos decodificarlo sin verificar
-        if (error instanceof jwt.TokenExpiredError) {
-          decoded = jwt.decode(token) as { exp: number; userId: string; rolId: string; categoriaServicio?: string };
-        } else {
-          throw error;
-        }
-      }
-  
+      // Attempt to decode the token without verification
+      const decoded = jwt.decode(token) as { exp: number; userId: string; rolId: string; permisos: string[] } | null;
+
       if (!decoded || !decoded.exp) {
         set.status = 401;
         return { error: 'Token inválido' };
       }
-  
+
       const currentTime = Math.floor(Date.now() / 1000);
       const tokenExpiration = decoded.exp;
       const timeUntilExpiration = tokenExpiration - currentTime;
-  
-      // Renovar si el token expirará en menos de 1 minuto o ha expirado hace menos de 3 minutos
-      if (timeUntilExpiration > 60 && timeUntilExpiration <= MAX_REFRESH_TIME) {
-        set.status = 200;
+
+      // Check if the token is within the valid refresh window
+      if (timeUntilExpiration > -MAX_REFRESH_TIME && timeUntilExpiration <= 60) {
+        // Verify if the user still exists in the database
+        const [user] = await db
+          .select()
+          .from(schema.usuario)
+          .where(eq(schema.usuario.id, decoded.userId))
+          .limit(1);
+
+        if (!user) {
+          set.status = 401;
+          return { error: 'Usuario no encontrado' };
+        }
+
+        // Generate a new token with a 5-minute expiration
+        const newToken = jwt.sign(
+          { userId: decoded.userId, rolId: decoded.rolId, permisos: decoded.permisos },
+          JWT_SECRET,
+          { expiresIn: '15m' }
+        );
+
+        return { newToken };
+      } else if (timeUntilExpiration > 60) {
+        // Token is still valid
         return { message: 'Token aún válido', token };
-      }
-  
-      // Verificar si el usuario aún existe en la base de datos
-      const [user] = await db
-        .select()
-        .from(schema.usuario)
-        .where(eq(schema.usuario.id, decoded.userId))
-        .limit(1);
-  
-      if (!user) {
+      } else {
+        // Token has expired and is outside the refresh window
         set.status = 401;
-        return { error: 'Usuario no encontrado' };
+        return { error: 'Token expirado y fuera de la ventana de actualización' };
       }
-  
-      // Generar un nuevo token con expiración de 5 minutos
-      const newToken = jwt.sign(
-        { userId: decoded.userId, rolId: decoded.rolId, categoriaServicio: decoded.categoriaServicio },
-        JWT_SECRET,
-        { expiresIn: '5m' }
-      );
-  
-      return { newToken };
     } catch (error) {
       set.status = 401;
       return { error: 'Error al procesar el token' };
