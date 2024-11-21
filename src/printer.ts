@@ -64,7 +64,7 @@ ${FONT_B}${SIZE_LARGE}${BOLD_ON}${ticketNumber}${BOLD_OFF}
 ${FONT_B}${SIZE_NORMAL}---------------------------------------------------------------${FONT_C}
 ${SIZE_DOUBLE_HEIGHT}${BOLD_ON}Servicio: ${servicePoint}${BOLD_OFF}
 ${SIZE_NORMAL}Fecha: ${date} Hora: ${currentTime}
-${SIZE_DOUBLE_WIDTH}Gracias por Trabajar con nosotros...!
+${SIZE_DOUBLE_WIDTH}Gracias por su preferencia
 ${LF}${CUT_PAPER}`;
 };
 

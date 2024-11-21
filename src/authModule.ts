@@ -75,7 +75,7 @@ const authModule = new Elysia({ prefix: '/auth' })
         permisos: permisos 
       }, 
       JWT_SECRET, 
-      { expiresIn: '15m' }
+      { expiresIn: '30m' }
     );
     const [empleado] = await db
       .select()
@@ -133,7 +133,7 @@ const authModule = new Elysia({ prefix: '/auth' })
         const newToken = jwt.sign(
           { userId: decoded.userId, rolId: decoded.rolId, permisos: decoded.permisos },
           JWT_SECRET,
-          { expiresIn: '15m' }
+          { expiresIn: '30m' }
         );
 
         return { newToken };

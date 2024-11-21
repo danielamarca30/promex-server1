@@ -1,5 +1,5 @@
 // import {fichas} from './fichas';
-import {videos,stream} from './videos';
+import {videos,stream,estadoPantalla} from './videos';
 import {comunicados} from './comunicados';
 import {cotizaciones} from './cotizaciones';
 import {categorias,subcategorias,servicios,puntosAtencion} from './servicios';
@@ -11,6 +11,7 @@ export {
     comunicados,
     cotizaciones,
     videos,
+    estadoPantalla,
     stream,
     categorias,
     subcategorias,

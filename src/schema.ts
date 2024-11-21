@@ -6,6 +6,7 @@ export const categoriaServicioEnum = mysqlEnum('categoria_servicio', ['Caja', 'E
 export const subCategoriaEjecutivoEnum = mysqlEnum('sub_categoria_ejecutivo', ['Liquidacion', 'Anticipo', 'Transporte']);
 export const estadoEmpleadoEnum = mysqlEnum('estado_empleado', ['Disponible', 'Ocupado']);
 export const tipoNotificacionEnum = mysqlEnum('tipo_notificacion', ['Nueva_Ficha', 'Cambio_Estado', 'Alerta_Capacidad', 'Mensaje_Sistema']);
+export const estadoPantallaEnum = mysqlEnum('estado_pantalla', ['Streaming', 'Videos', '']);
 
 // Tablas
 export const rol = mysqlTable('rol', {
@@ -150,6 +151,17 @@ export const videos = mysqlTable('videos', {
   filePath: varchar('file_path', { length: 255 }).notNull(),
   active: boolean('active').notNull().default(true),
   usuarioId:varchar('usuario_id',{length:36}),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+});
+
+export const estadoPantalla=mysqlTable('estado_pantalla',{
+  id: varchar('id', { length: 36 }).primaryKey(),
+  active: boolean('active').notNull().default(true),
+  video: boolean('video').notNull().default(true),
+  streamming: boolean('streamming').notNull().default(false),
+  tiempoVideo: int('tiempo_video').notNull(),
+  tiempoStreamming: int('tiempo_streamming').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 });

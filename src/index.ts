@@ -15,7 +15,7 @@ import authModule from './authModule';
 import {printTicket} from './printer';
 import path from 'path';
 import 'dotenv/config';
-import { comunicados,cotizaciones,videos,stream,categorias,subcategorias,servicios,puntosAtencion,empleados,usuarios,roles,empleadosUsuarios,fichas,metricas } from 'rutas';
+import { comunicados,cotizaciones,videos,estadoPantalla,stream,categorias,subcategorias,servicios,puntosAtencion,empleados,usuarios,roles,empleadosUsuarios,fichas,metricas } from 'rutas';
 
 const UPLOAD_DIR = './uploads';
 const PUBLIC_DIR = './public';
@@ -84,6 +84,7 @@ const app = new Elysia()
   .group('/ext',app => app
     .use(stream)
     .use(videos)
+    .use(estadoPantalla)
     .use(comunicados)
     .use(cotizaciones)
   )
