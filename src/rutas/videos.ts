@@ -158,3 +158,96 @@ export const stream = new Elysia({ prefix: 'stream' })
       return createReadStream(filePath);
     }
   });
+
+  export const estadoPantalla = new Elysia({ prefix: 'estado-pantalla' })
+  .use(authMiddleware)
+  .post('/', async ({ body }) => {
+    const { active, video, streamming, tiempoVideo, tiempoStreamming } = body;
+    const id = uuidv4();
+
+    try {
+      await db.insert(schema.estadoPantalla).values({
+        id,
+        active,
+        video,
+        streamming,
+        tiempoVideo,
+        tiempoStreamming,
+      });
+
+      return { id, active, video, streamming, tiempoVideo, tiempoStreamming };
+    } catch (error) {
+      console.error('Error al crear el estado de pantalla:', error);
+      throw new Error('No se pudo crear el estado de pantalla');
+    }
+  }, {
+    body: t.Object({
+      active: t.Boolean(),
+      video: t.Boolean(),
+      streamming: t.Boolean(),
+      tiempoVideo: t.Integer(),
+      tiempoStreamming: t.Integer(),
+    })
+  })
+  .get('/', async () => {
+    try {
+      const estados = await db.select().from(schema.estadoPantalla);
+      return estados;
+    } catch (error) {
+      console.error('Error al obtener los estados de pantalla:', error);
+      throw new Error('No se pudieron obtener los estados de pantalla');
+    }
+  })
+  .get('/:id', async ({ params }) => {
+    try {
+      const estado = await db.select().from(schema.estadoPantalla).where(eq(schema.estadoPantalla.id, params.id)).limit(1);
+      return estado[0] || { error: 'Estado de pantalla no encontrado' };
+    } catch (error) {
+      console.error('Error al obtener el estado de pantalla:', error);
+      throw new Error('No se pudo obtener el estado de pantalla');
+    }
+  })
+  .put('/:id', async ({ params, body }) => {
+    const { active, video, streamming, tiempoVideo, tiempoStreamming } = body;
+
+    try {
+      await db.update(schema.estadoPantalla)
+        .set({ active, video, streamming, tiempoVideo, tiempoStreamming })
+        .where(eq(schema.estadoPantalla.id, params.id));
+
+      const updatedEstado = await db.select().from(schema.estadoPantalla).where(eq(schema.estadoPantalla.id, params.id)).limit(1);
+
+      if (updatedEstado.length === 0) {
+        return { error: 'Estado de pantalla no encontrado' };
+      }
+
+      return updatedEstado[0];
+    } catch (error) {
+      console.error('Error al actualizar el estado de pantalla:', error);
+      throw new Error('No se pudo actualizar el estado de pantalla');
+    }
+  }, {
+    body: t.Object({
+      active: t.Boolean(),
+      video: t.Boolean(),
+      streamming: t.Boolean(),
+      tiempoVideo: t.Integer(),
+      tiempoStreamming: t.Integer(),
+    })
+  })
+  .delete('/:id', async ({ params }) => {
+    try {
+      const estadoToDelete = await db.select().from(schema.estadoPantalla).where(eq(schema.estadoPantalla.id, params.id)).limit(1);
+
+      if (estadoToDelete.length === 0) {
+        return { error: 'Estado de pantalla no encontrado' };
+      }
+
+      await db.delete(schema.estadoPantalla).where(eq(schema.estadoPantalla.id, params.id));
+
+      return { message: 'Estado de pantalla eliminado exitosamente' };
+    } catch (error) {
+      console.error('Error al eliminar el estado de pantalla:', error);
+      throw new Error('No se pudo eliminar el estado de pantalla');
+    }
+  });
