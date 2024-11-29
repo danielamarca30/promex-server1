@@ -5,7 +5,7 @@
 /uploads
 /.pnp
 .pnp.js
-
+/drizzle
 # testing
 /coverage
 
