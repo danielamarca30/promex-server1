@@ -488,7 +488,7 @@ export const puntosAtencion=new Elysia({prefix:'puntos-atencion'})
 .get('/', async ({ set }) => {
   const puntosAtencion = await db.select().from(schema.puntoAtencion);
   set.status = 200;
-  console.log('putnos deatencion',puntosAtencion);
+  // console.log('putnos deatencion',puntosAtencion);
   return puntosAtencion;
 })
 .get('/:id', async ({ params, set }) => {

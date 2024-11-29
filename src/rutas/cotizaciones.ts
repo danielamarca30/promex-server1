@@ -49,11 +49,10 @@ import { authMiddleware, createAuthGuard } from '../authMiddleware';
       })
       .put('/:id', async ({ params, body }) => {
         const updateData: Partial<typeof schema.cotizaciones.$inferInsert> = {};
-        
         if (body.mineral !== undefined) updateData.mineral = body.mineral;
         if (body.cotizacion !== undefined) updateData.cotizacion = body.cotizacion.toString(); // Convertir a cadena
         if (body.unidad !== undefined) updateData.unidad = body.unidad;
-        if (body.fecha !== undefined) updateData.fecha = new Date();
+        if (body.fecha !== undefined) updateData.fecha = new Date(body.fecha);
         if (body.active !== undefined) updateData.active = body.active;
         
         try {
