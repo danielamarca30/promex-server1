@@ -1,4 +1,4 @@
-import { mysqlTable, varchar, text, datetime, int, mysqlEnum, index, uniqueIndex, boolean, timestamp, decimal,json } from 'drizzle-orm/mysql-core';
+import { mysqlTable, varchar, text, datetime, int, mysqlEnum, index, uniqueIndex, boolean, timestamp, decimal, json } from 'drizzle-orm/mysql-core';
 
 // Enums
 export const estadoFichaEnum = mysqlEnum('estado_ficha', ['Pendiente', 'Llamado', 'En_Atencion', 'Atendido', 'Cancelado', 'No_Presentado']);
@@ -49,16 +49,13 @@ export const usuario = mysqlTable('usuario', {
 export const puntoAtencion = mysqlTable('punto_atencion', {
   id: varchar('id', { length: 36 }).primaryKey(),
   nombre: varchar('nombre', { length: 50 }).notNull(),
-  categoriaId: varchar('categoria_id', { length: 36 }).notNull().references(() => categoriaServicio.id),
   empleadoId: varchar('empleado_id', { length: 36 }).references(() => empleado.id),
   activo: boolean('activo').notNull().default(true),
 }, (table) => ({
   nombreIndex: uniqueIndex('nombre_idx').on(table.nombre),
-  categoriaIndex: index('categoria_idx').on(table.categoriaId),
   empleadoIndex: index('empleado_idx').on(table.empleadoId),
 }));
 
-// New tables for categories and subcategories
 export const categoriaServicio = mysqlTable('categoria_servicio', {
   id: varchar('id', { length: 36 }).primaryKey(),
   nombre: varchar('nombre', { length: 50 }).notNull(),
@@ -77,7 +74,6 @@ export const subCategoriaServicio = mysqlTable('sub_categoria_servicio', {
   categoriaIndex: index('categoria_idx').on(table.categoriaId),
 }));
 
-// Modified servicio table
 export const servicio = mysqlTable('servicio', {
   id: varchar('id', { length: 36 }).primaryKey(),
   nombre: varchar('nombre', { length: 100 }).notNull(),
@@ -85,7 +81,7 @@ export const servicio = mysqlTable('servicio', {
   descripcion: text('descripcion'),
   categoriaId: varchar('categoria_id', { length: 36 }).notNull().references(() => categoriaServicio.id),
   subCategoriaId: varchar('sub_categoria_id', { length: 36 }).references(() => subCategoriaServicio.id),
-  tiempoEstimado: int('tiempo_estimado').notNull(), // en minutos
+  tiempoEstimado: int('tiempo_estimado').notNull(),
   activo: boolean('activo').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
@@ -93,6 +89,19 @@ export const servicio = mysqlTable('servicio', {
   nombreIndex: uniqueIndex('nombre_idx').on(table.nombre),
   categoriaIndex: index('categoria_idx').on(table.categoriaId),
   subCategoriaIndex: index('sub_categoria_idx').on(table.subCategoriaId),
+}));
+
+export const puntoAtencionServicio = mysqlTable('punto_atencion_servicio', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  puntoAtencionId: varchar('punto_atencion_id', { length: 36 }).notNull().references(() => puntoAtencion.id),
+  servicioId: varchar('servicio_id', { length: 36 }).notNull().references(() => servicio.id),
+  activo: boolean('activo').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+}, (table) => ({
+  puntoAtencionIndex: index('punto_atencion_idx').on(table.puntoAtencionId),
+  servicioIndex: index('servicio_idx').on(table.servicioId),
+  uniqueRelation: uniqueIndex('punto_atencion_servicio_unique').on(table.puntoAtencionId, table.servicioId),
 }));
 
 export const ficha = mysqlTable('ficha', {
@@ -143,19 +152,18 @@ export const metricaTiempoReal = mysqlTable('metrica_tiempo_real', {
   versionIndex: index('version_idx').on(table.version),
 }));
 
-
 export const videos = mysqlTable('videos', {
   id: varchar('id', { length: 36 }).primaryKey(),
   title: varchar('title', { length: 255 }).notNull(),
   description: text('description'),
   filePath: varchar('file_path', { length: 255 }).notNull(),
   active: boolean('active').notNull().default(true),
-  usuarioId:varchar('usuario_id',{length:36}),
+  usuarioId: varchar('usuario_id', { length: 36 }).references(() => usuario.id),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 });
 
-export const estadoPantalla=mysqlTable('estado_pantalla',{
+export const estadoPantalla = mysqlTable('estado_pantalla', {
   id: varchar('id', { length: 36 }).primaryKey(),
   active: boolean('active').notNull().default(true),
   video: boolean('video').notNull().default(true),
@@ -165,23 +173,25 @@ export const estadoPantalla=mysqlTable('estado_pantalla',{
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 });
-export const cotizaciones=mysqlTable('cotizaciones',{
-    id: varchar('id', { length: 36 }).primaryKey(),
-    mineral: varchar('mineral', { length: 255 }).notNull(),
-    cotizacion: decimal('cotizacion', { precision: 10, scale: 2 }).notNull(),
-    unidad:varchar('unidad',{length:5}).notNull(),
-    fecha:timestamp('fecha').notNull().defaultNow(),
-    active: boolean('active').notNull().default(true),
-    usuarioId:varchar('usuario_id',{length:36}).notNull(),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+
+export const cotizaciones = mysqlTable('cotizaciones', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  mineral: varchar('mineral', { length: 255 }).notNull(),
+  cotizacion: decimal('cotizacion', { precision: 10, scale: 2 }).notNull(),
+  unidad: varchar('unidad', { length: 5 }).notNull(),
+  fecha: timestamp('fecha').notNull().defaultNow(),
+  active: boolean('active').notNull().default(true),
+  usuarioId: varchar('usuario_id', { length: 36 }).notNull().references(() => usuario.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 });
-export const comunicados=mysqlTable('comunicados',{
-    id: varchar('id', { length: 36 }).primaryKey(),
-    comunicado: text('comunicado').notNull(),
-    descripcion: text('descripcion').notNull(),
-    active: boolean('active').notNull().default(true),
-    usuarioId:varchar('usuario_id',{length:36}).notNull(),
-    createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
+
+export const comunicados = mysqlTable('comunicados', {
+  id: varchar('id', { length: 36 }).primaryKey(),
+  comunicado: text('comunicado').notNull(),
+  descripcion: text('descripcion').notNull(),
+  active: boolean('active').notNull().default(true),
+  usuarioId: varchar('usuario_id', { length: 36 }).notNull().references(() => usuario.id),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
 });

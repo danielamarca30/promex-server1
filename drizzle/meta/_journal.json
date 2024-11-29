@@ -29,6 +29,13 @@
       "when": 1732541635735,
       "tag": "0003_reflective_galactus",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1732895693320,
+      "tag": "0004_nice_vindicator",
+      "breakpoints": true
     }
   ]
 }
